@@ -1,2 +1,3 @@
 # Ignore build directory from VCS
 build/
+.vscode/
