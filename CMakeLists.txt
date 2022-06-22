@@ -1,5 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
-set(CONF_FILE segger_rtt.conf sensors.conf shell.conf)
+set(CONF_FILE segger_rtt.conf sensors.conf shell.conf display.conf)
+set(DTC_OVERLAY_FILE ssd1306_128x32.overlay)
+
 
 cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
