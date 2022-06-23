@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 set(CONF_FILE segger_rtt.conf sensors.conf shell.conf display.conf)
-set(DTC_OVERLAY_FILE ssd1306_128x32.overlay)
+set(DTC_OVERLAY_FILE ssd1306_128x64.overlay)
 
 
 cmake_minimum_required(VERSION 3.20.0)

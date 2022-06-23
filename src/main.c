@@ -1,4 +1,14 @@
-
+/**
+ * @file main.c
+ * @author Wilfred Mallawa
+ * @brief Mini application to monitor climate metrics using the
+ * 		  thingy52 interfaced with an ssd1305 (128x64-OLED) display
+ * 		  to display metrics in real time.
+ *
+ * @version 0.1
+ * @date 2022-06-23
+ *
+ */
 #include <zephyr/zephyr.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>

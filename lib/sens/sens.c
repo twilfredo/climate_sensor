@@ -1,3 +1,13 @@
+
+/**
+ * @file main.c
+ * @author Wilfred Mallawa
+ * @brief Primary sensor thread, this module, samples/controls all sensors
+ * 		  and distributes them to consumer threads (display etc..)
+ * @version 0.1
+ * @date 2022-06-23
+ *
+ */
 #include <zephyr/zephyr.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>
@@ -43,7 +53,7 @@ static struct sens_packet sens_data = {0};
 /* Define a sensor msgq */
 K_MSGQ_DEFINE(sens_q, sizeof(struct sens_packet), 20, 4);
 
-/* Process and HTS221 Sample */
+/* Process and fetch HTS221 sample and update packet buffer*/
 static void hts221_process_sample(const struct device *dev)
 {
 #ifdef CONFIG_APP_OBS_NUMBER
@@ -82,6 +92,7 @@ static void hts221_process_sample(const struct device *dev)
 	sens_data.hts221_rh = sensor_value_to_double(&hum);
 }
 
+/* process and fetch lps22hb sample and update packet buffer*/
 static void lps22hb_process_sample(const struct device *dev)
 {
 #ifdef CONFIG_APP_OBS_NUMBER
@@ -120,6 +131,7 @@ static void lps22hb_process_sample(const struct device *dev)
 	sens_data.lps22hb_temp = sensor_value_to_double(&temp);
 }
 
+/* Process and fetch CCS811 sample and update packet buffer*/
 static int ccs811_process_sample(const struct device *dev)
 {
 	struct sensor_value co2, tvoc, voltage, current;
@@ -165,6 +177,7 @@ static int ccs811_process_sample(const struct device *dev)
 	return rc;
 }
 
+/* Process and fetch lis2dh sample and update packet buffer*/
 static void lis2dh_process_sample(const struct device *sensor)
 {
 	static unsigned int count;
@@ -201,6 +214,7 @@ static void lis2dh_process_sample(const struct device *sensor)
 	}
 }
 
+/* Process and fetch vBATT sample and update packet buffer*/
 void battery_process_sample(void) {
  	int batt_mV;
 	unsigned int batt_pptt;
@@ -215,7 +229,8 @@ void battery_process_sample(void) {
 
 /*
  * Sensor thread to read out all sensory data collected
- * by the onboard climate sensors.
+ * by the onboard climate sensors. Once fetched, send data to consumer
+ * threads (display thread etc...)
  */
 void sens_thread(void *unused1, void *unused2, void *unused3)
 {
@@ -226,6 +241,7 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 	struct ccs811_configver_type cfgver;
 	int rc;
 
+	/* HW INIT/OK */
 	if (battery_measure_enable(true) != 0) {
 		LOG_ERR("failed to setup battery meas");
 	}
@@ -275,6 +291,7 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 #endif
 
 	while(1) {
+		/* Fetch, process and update */
 		hts221_process_sample(hts221_dev);
 		lps22hb_process_sample(lps22hb_dev);
 		lis2dh_process_sample(lis2dh_dev);
@@ -292,7 +309,6 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 			LOG_WRN("sensor data queue attempted overflow -> purged");
 			k_msgq_purge(&sens_q);
 		}
-
 		//memset(&sens_data, 0, sizeof(struct sens_packet));
 		k_msleep(SAMPLE_UPDATE_RATE);
 	}

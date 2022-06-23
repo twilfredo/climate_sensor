@@ -1,3 +1,11 @@
+
+/**
+ * @file main.c
+ * @author Wilfred Mallawa
+ * @version 0.1
+ * @date 2022-06-23
+ *
+ */
 #ifndef SENS_H
 #define SENS_H
 
