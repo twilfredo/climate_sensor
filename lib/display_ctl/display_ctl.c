@@ -1,3 +1,13 @@
+/**
+ * @file main.c
+ * @author Wilfred Mallawa
+ * @brief Display control module, receives sensor data and
+ *        uses the character frame buffer (cfb) to write to the
+ *        interfaced ssd1306 display using Zephyr device drivers.
+ * @version 0.1
+ * @date 2022-06-23
+ *
+ */
 #include <zephyr/zephyr.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/device.h>

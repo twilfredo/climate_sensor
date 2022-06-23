@@ -1,3 +1,10 @@
+/**
+ * @file main.c
+ * @author Wilfred Mallawa
+ * @version 0.1
+ * @date 2022-06-23
+ *
+ */
 #ifndef DISPLAY_CTL_H
 #define DISPLAY_CTL_H
 
