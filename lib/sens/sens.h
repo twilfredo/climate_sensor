@@ -4,11 +4,21 @@
 /* Sensor Thread Details */
 #define SENS_T_STACK_SIZE 2048
 #define SENS_T_PRIOR 4
-
-K_THREAD_STACK_DEFINE(sens_t_stack_area, SENS_T_STACK_SIZE);
-struct k_thread sens_t_data;
-k_tid_t sens_tid;
+#define SAMPLE_UPDATE_RATE 1000 //ms
+extern struct k_thread sens_t_data;
+extern k_tid_t sens_tid;
+extern struct k_msgq sens_q;
 /* ---------------------- */
+
+/* Sensor Packet */
+struct sens_packet {
+    double hts221_temp;     //celsius
+    double hts221_rh;       //rh%
+    double lps22hb_press;   //kPA
+    double lps22hb_temp;    //celsius
+    uint32_t ccs811_eco2;   //ppm
+    uint32_t ccs811_etvoc;  //ppb
+};
 
 /* Function Declarations */
 extern void sens_thread(void *, void *, void *);

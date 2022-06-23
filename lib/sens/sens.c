@@ -5,10 +5,14 @@
 #include <zephyr/drivers/sensor/ccs811.h>
 #include <stdio.h>
 #include <zephyr/sys/util.h>
+#include "sens.h"
 
 LOG_MODULE_REGISTER(climate_sens, CONFIG_LOG_DEFAULT_LEVEL);
-
 static bool app_fw_2;
+/* Global buffer to save fetched sample data */
+static struct sens_packet sens_data = {0};
+/* Define a sensor msgq */
+K_MSGQ_DEFINE(sens_q, sizeof(struct sens_packet), 20, 4);
 
 /* Process and HTS221 Sample */
 static void hts221_process_sample(const struct device *dev)
@@ -43,6 +47,10 @@ static void hts221_process_sample(const struct device *dev)
 	/* display humidity */
 	LOG_INF("hts221: relative Humidity:%.1f%%\n",
 		sensor_value_to_double(&hum));
+
+	/* Update data buffers */
+	sens_data.hts221_temp = sensor_value_to_double(&temp);
+	sens_data.hts221_rh = sensor_value_to_double(&hum);
 }
 
 static void lps22hb_process_sample(const struct device *dev)
@@ -77,6 +85,10 @@ static void lps22hb_process_sample(const struct device *dev)
 
 	/* display temperature */
 	LOG_INF("lps22hb: temperature:%.1f C\n", sensor_value_to_double(&temp));
+
+	/* Update data buffers */
+	sens_data.lps22hb_press = sensor_value_to_double(&pressure);
+	sens_data.lps22hb_temp = sensor_value_to_double(&temp);
 }
 
 static int ccs811_process_sample(const struct device *dev)
@@ -103,6 +115,9 @@ static int ccs811_process_sample(const struct device *dev)
 		sensor_channel_get(dev, SENSOR_CHAN_CURRENT, &current);
 		LOG_INF("ccs811: %u ppm eCO2; %u ppb eTVOC\n",
 		       co2.val1, tvoc.val1);
+		/* Update data buffers */
+		sens_data.ccs811_eco2 = co2.val1;
+		sens_data.ccs811_etvoc = tvoc.val1;
 #ifdef CONFIG_CCS811_VERBOSE
 		LOG_INF("ccs811: Voltage: %d.%06dV; Current: %d.%06dA\n", voltage.val1,
 		       voltage.val2, current.val1, current.val2);
@@ -178,6 +193,14 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 		} else if (rc != 0) {
 			LOG_ERR("CCS811 fetch failed: %d\n", rc);
 		}
-		k_msleep(2000);
+		/* Collection complete (buffer update),now send data over */
+		if (k_msgq_put(&sens_q, &sens_data, K_NO_WAIT) != 0) {
+			/* Queue is full, lets purge it */
+			LOG_WRN("sensor data queue attempted overflow -> purged");
+			k_msgq_purge(&sens_q);
+		}
+
+		//memset(&sens_data, 0, sizeof(struct sens_packet));
+		k_msleep(SAMPLE_UPDATE_RATE);
 	}
 }

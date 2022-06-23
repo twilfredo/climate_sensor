@@ -3,8 +3,20 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 #include "sens.h"
+#include "display_ctl.h"
 
 LOG_MODULE_REGISTER(core, CONFIG_LOG_DEFAULT_LEVEL);
+
+/* Thread Data */
+/* Display control thread data */
+struct k_thread disp_t_data = {0};
+k_tid_t disp_tid = {0};
+K_THREAD_STACK_DEFINE(disp_t_stack_area, DISP_T_STACK_SIZE);
+/* Sensor control thread data */
+struct k_thread sens_t_data = {0};
+k_tid_t sens_tid = {0};
+K_THREAD_STACK_DEFINE(sens_t_stack_area, SENS_T_STACK_SIZE);
+
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS   1000
 
@@ -22,7 +34,14 @@ int thread_init(void) {
                                  sens_thread,
                                  NULL, NULL, NULL,
                                  SENS_T_PRIOR, 0, K_NO_WAIT);
-	LOG_INF("Sys thread init OK");
+
+	disp_tid = k_thread_create(&disp_t_data, disp_t_stack_area,
+                                 K_THREAD_STACK_SIZEOF(disp_t_stack_area),
+                                 disp_ctl_thread,
+                                 NULL, NULL, NULL,
+                                 DISP_T_PRIOR, 0, K_NO_WAIT);
+
+	LOG_INF("Sys threads init OK");
 	return 0;
 }
 

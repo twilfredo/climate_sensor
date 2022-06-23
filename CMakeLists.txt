@@ -10,8 +10,10 @@ project(climate_sens)
 #Add Include Directories
 include_directories(
 			lib/sens/
+            lib/display_ctl/
 			)
 
 target_sources(app PRIVATE src/main.c
                             lib/sens/sens.c
+                            lib/display_ctl/display_ctl.c
                             )
