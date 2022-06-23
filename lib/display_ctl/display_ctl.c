@@ -100,16 +100,21 @@ void disp_ctl_thread(void *unused1, void *unused2, void *unused3)
     k_msleep(SPLASH_DELAY);
 
     while(1) {
+        LOG_ERR("HERE");
         /* Receive a sensor packet buffer */
         /* Wait here until a packet is received */
         if (k_msgq_get(&sens_q, &sens_data, K_FOREVER) == 0) {
             LOG_DBG("Updating display with new sensor data");
-            disp_sens_temps(dev, &sens_data);
-            /* Received non-stale air quality details */
-            if (sens_data.ccs811_eco2 > 0 &&  sens_data.ccs811_etvoc > 0) {
-                k_msleep(DISP_UPDATE_DELAY/2);
+            if (sens_data.xy_angle > 90) {
+                disp_sens_temps(dev, &sens_data);
+            } else {
                 disp_sens_airq(dev, &sens_data);
             }
+            /* Received non-stale air quality details */
+            // if (sens_data.ccs811_eco2 > 0 &&  sens_data.ccs811_etvoc > 0) {
+            //     k_msleep(DISP_UPDATE_DELAY/2);
+            //     disp_sens_airq(dev, &sens_data);
+            // }
         }
 
         memset(&sens_data, 0, sizeof(struct sens_packet));

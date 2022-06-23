@@ -5,6 +5,7 @@
 #include <zephyr/drivers/sensor/ccs811.h>
 #include <stdio.h>
 #include <zephyr/sys/util.h>
+#include <math.h>
 #include "sens.h"
 
 LOG_MODULE_REGISTER(climate_sens, CONFIG_LOG_DEFAULT_LEVEL);
@@ -136,6 +137,42 @@ static int ccs811_process_sample(const struct device *dev)
 	return rc;
 }
 
+static void lis2dh_process_sample(const struct device *sensor)
+{
+	static unsigned int count;
+	struct sensor_value accel[3];
+	const char *overrun = "";
+	double rads = 0, degs = 0;
+	int rc = sensor_sample_fetch(sensor);
+
+	++count;
+	if (rc == -EBADMSG) {
+		/* Sample overrun.  Ignore in polled mode. */
+		if (IS_ENABLED(CONFIG_LIS2DH_TRIGGER)) {
+			overrun = "[OVERRUN] ";
+		}
+		rc = 0;
+	}
+	if (rc == 0) {
+		rc = sensor_channel_get(sensor,
+					SENSOR_CHAN_ACCEL_XYZ,
+					accel);
+	}
+	if (rc < 0) {
+		LOG_ERR("ERROR: Update failed: %d\n", rc);
+	} else {
+		LOG_INF("lisdh: #%u @ %u ms: %sx %f , y %f , z %f",
+		       count, k_uptime_get_32(), overrun,
+		       sensor_value_to_double(&accel[0]),
+		       sensor_value_to_double(&accel[1]),
+		       sensor_value_to_double(&accel[2]));
+		rads = atan(sensor_value_to_double(&accel[0])/(sensor_value_to_double(&accel[1])));
+		degs = rads*RAD_TO_DEG;
+		sens_data.xy_angle = rads*RAD_TO_DEG;
+		LOG_INF("lisdh: angle: %.2f", degs);
+	}
+}
+
 /*
  * Sensor thread to read out all sensory data collected
  * by the onboard climate sensors.
@@ -145,9 +182,19 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 	const struct device *hts221_dev = device_get_binding("HTS221");
 	const struct device *lps22hb_dev = device_get_binding(DT_LABEL(DT_INST(0, st_lps22hb_press)));
 	const struct device *ccs811_dev = device_get_binding(DT_LABEL(DT_INST(0, ams_ccs811)));
-
+	const struct device *lis2dh_dev = DEVICE_DT_GET_ANY(st_lis2dh);
 	struct ccs811_configver_type cfgver;
 	int rc;
+
+	if (lis2dh_dev == NULL) {
+		LOG_ERR("could not get LIS2DH device\n");
+		return;
+	}
+
+	if (!device_is_ready(lis2dh_dev)) {
+		LOG_ERR("lis2dh: device is not ready\n");
+		return;
+	}
 
 	if (hts221_dev == NULL) {
 		LOG_ERR("could not get HTS221 device\n");
@@ -186,7 +233,7 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 	while(1) {
 		hts221_process_sample(hts221_dev);
 		lps22hb_process_sample(lps22hb_dev);
-
+		lis2dh_process_sample(lis2dh_dev);
 		rc = ccs811_process_sample(ccs811_dev);
 		if (rc == -EAGAIN) {
 			LOG_WRN("CCS811 fetch got stale data\n");
