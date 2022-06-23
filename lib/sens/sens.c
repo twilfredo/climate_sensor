@@ -6,9 +6,37 @@
 #include <stdio.h>
 #include <zephyr/sys/util.h>
 #include <math.h>
+
 #include "sens.h"
+#include "battery.h"
 
 LOG_MODULE_REGISTER(climate_sens, CONFIG_LOG_DEFAULT_LEVEL);
+
+/** A discharge curve specific to the power source. */
+static const struct battery_level_point levels[] = {
+#if DT_NODE_HAS_PROP(DT_INST(0, voltage_divider), io_channels)
+	/* "Curve" here eyeballed from captured data for the [Adafruit
+	 * 3.7v 2000 mAh](https://www.adafruit.com/product/2011) LIPO
+	 * under full load that started with a charge of 3.96 V and
+	 * dropped about linearly to 3.58 V over 15 hours.  It then
+	 * dropped rapidly to 3.10 V over one hour, at which point it
+	 * stopped transmitting.
+	 *
+	 * Based on eyeball comparisons we'll say that 15/16 of life
+	 * goes between 3.95 and 3.55 V, and 1/16 goes between 3.55 V
+	 * and 3.1 V.
+	 */
+
+	{ 10000, 3950 },
+	{ 625, 3550 },
+	{ 0, 3100 },
+#else
+	/* Linear from maximum voltage to minimum voltage. */
+	{ 10000, 3600 },
+	{ 0, 1700 },
+#endif
+};
+
 static bool app_fw_2;
 /* Global buffer to save fetched sample data */
 static struct sens_packet sens_data = {0};
@@ -173,6 +201,18 @@ static void lis2dh_process_sample(const struct device *sensor)
 	}
 }
 
+void battery_process_sample(void) {
+ 	int batt_mV;
+	unsigned int batt_pptt;
+
+	batt_mV = battery_sample();
+	batt_pptt = battery_level_pptt(batt_mV, levels);
+	LOG_INF("%d mV; %u pptt\n",
+		batt_mV, batt_pptt);
+
+	sens_data.batt_mV = batt_mV;
+}
+
 /*
  * Sensor thread to read out all sensory data collected
  * by the onboard climate sensors.
@@ -185,6 +225,10 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 	const struct device *lis2dh_dev = DEVICE_DT_GET_ANY(st_lis2dh);
 	struct ccs811_configver_type cfgver;
 	int rc;
+
+	if (battery_measure_enable(true) != 0) {
+		LOG_ERR("failed to setup battery meas");
+	}
 
 	if (lis2dh_dev == NULL) {
 		LOG_ERR("could not get LIS2DH device\n");
@@ -234,6 +278,8 @@ void sens_thread(void *unused1, void *unused2, void *unused3)
 		hts221_process_sample(hts221_dev);
 		lps22hb_process_sample(lps22hb_dev);
 		lis2dh_process_sample(lis2dh_dev);
+		battery_process_sample();
+
 		rc = ccs811_process_sample(ccs811_dev);
 		if (rc == -EAGAIN) {
 			LOG_WRN("CCS811 fetch got stale data\n");

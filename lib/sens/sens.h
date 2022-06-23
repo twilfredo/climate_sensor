@@ -22,6 +22,7 @@ struct sens_packet {
     uint32_t ccs811_eco2;   //ppm
     uint32_t ccs811_etvoc;  //ppb
     double xy_angle;        //angle in degrees
+    uint32_t batt_mV;       //battery mV
 };
 
 /* Function Declarations */

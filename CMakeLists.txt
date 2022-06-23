@@ -15,5 +15,6 @@ include_directories(
 
 target_sources(app PRIVATE src/main.c
                             lib/sens/sens.c
+                            lib/sens/battery.c
                             lib/display_ctl/display_ctl.c
                             )
