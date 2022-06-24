@@ -28,4 +28,8 @@ config APP_ENV_HUMIDITY
 	default 50
 	depends on APP_USE_DEF_ENVDATA
 
+config DEBUG_BLINKY
+	bool "Debug LED Status"
+	default n
+
 source "Kconfig.zephyr"

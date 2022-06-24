@@ -60,7 +60,15 @@ int thread_init(void) {
  */
 void main(void)
 {
+	/* Init systhreads */
+	thread_init();
+
+#ifndef CONFIG_DEBUG_BLINKY
+	return;
+#endif
+
 	LOG_DBG("Init debug leds");
+
 	if (!device_is_ready(led1.port) || !device_is_ready(led2.port)) {
 		LOG_ERR("Debug led device error");
 		return;
@@ -70,9 +78,6 @@ void main(void)
 		LOG_ERR("Debug led gpio error");
 		return;
 	}
-
-	/* Init systhreads */
-	thread_init();
 
 	while (1) {
 		if (gpio_pin_toggle_dt(&led1) || gpio_pin_toggle_dt(&led2)) {
