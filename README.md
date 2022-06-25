@@ -16,7 +16,7 @@ The parameter are displayed on to the OLED display connected on the external I2C
 
 ## Let there B-roll...
 
-![cs3](https://user-images.githubusercontent.com/36925352/175752444-2e5a9140-6ccb-45ea-a447-c81c89f96aeb.jpg)
+![cs4](https://user-images.githubusercontent.com/36925352/175752631-ffabccc8-6a0b-42b9-ad8c-2bac82e2cf2d.jpg)
 
 ![cs2](https://user-images.githubusercontent.com/36925352/175752445-b06e7d26-2563-4034-af1a-e44c9b4dc1be.jpg)
 
