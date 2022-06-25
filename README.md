@@ -25,7 +25,7 @@ The parameter are displayed on to the OLED display connected on the external I2C
 
 ## Building/Flashing
 
-App has been tested on latest zephyr release v3.1 (also supports the current development branch as of https://github.com/zephyrproject-rtos/zephyr/pull/46859)
+App has been tested on latest zephyr release v3.1 (also supports the current development branch as of <88ca3aca98>)
 
 ```
 git clone git@github.com:thulithwilfred/climate_sensor.git
