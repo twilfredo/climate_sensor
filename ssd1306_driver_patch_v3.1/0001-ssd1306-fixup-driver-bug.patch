@@ -1,0 +1,37 @@
+From 36028938ae34feb0724c8763b7f5f9745550e68a Mon Sep 17 00:00:00 2001
+From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Date: Sat, 25 Jun 2022 00:47:00 +1000
+Subject: [PATCH] ssd1306: fixup driver `bug`
+
+Note, this is a super weird issue (likely isolated to the ebay
+displays), where the driver IC seems to be an sh1106 despite being
+advertised as an ssd1306.
+
+However, the only works consistently with the additions made in this
+commit. Still unsure why? checked the register maps, no such cmds
+exist.
+
+But the display wont work exclusively in SSD1306_DEFUALT mode either, so
+it works with the SH1106 write function... confusion...
+
+Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
+---
+ drivers/display/ssd1306.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/display/ssd1306.c b/drivers/display/ssd1306.c
+index a7c0929bb9..0b43138e6c 100644
+--- a/drivers/display/ssd1306.c
++++ b/drivers/display/ssd1306.c
+@@ -169,6 +169,8 @@ static inline int ssd1306_set_charge_pump(const struct device *dev)
+ 		SSD1306_SET_CHARGE_PUMP_ON_ENABLED,
+ #endif
+ #if defined(CONFIG_SSD1306_SH1106_COMPATIBLE)
++		SSD1306_SET_CHARGE_PUMP_ON,
++		SSD1306_SET_CHARGE_PUMP_ON_ENABLED,
+ 		SH1106_SET_DCDC_MODE,
+ 		SH1106_SET_DCDC_ENABLED,
+ #endif
+-- 
+2.36.1
+
