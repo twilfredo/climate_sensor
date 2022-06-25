@@ -34,3 +34,7 @@ cd climate_sensor
 west build
 west flash -r jlink
 ```
+
+## SSD1306 Driver Patch
+
+You may need to apply the driver patch (in `ssd1306_driver_patch_v3.1`) to the zephyr source for certain `SSD1306/SH1106` driver ICs to work. Check the commit msg on the patch for more details.
