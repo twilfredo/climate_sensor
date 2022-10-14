@@ -12,7 +12,7 @@ The following parameters are currently monitored:
   * Equivalent total volatile organic compound - ppb
   * Battery Voltage/Level
 
-The parameter are displayed on to the OLED display connected on the external I2C bus supports SSD1306/SH1106 (with kConfig) display driver IC. The metrics display can be toggled through by the onboard push button.
+The parameters are displayed on the OLED display connected on the external I2C bus, it supports the SSD1306/SH1106 (with kConfig) display driver IC. The metrics display can be toggled through by the onboard push button (back of board).
 
 ## Let there B-roll...
 
